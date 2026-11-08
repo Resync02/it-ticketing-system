@@ -27,7 +27,7 @@ const devices = [
   "Printer",
   "Scanner",
   "Internet / WiFi / LAN",
-  "Ecount",
+  "ERP",
   "CCTV",
   "Attendance Device",
   "Username / Password",

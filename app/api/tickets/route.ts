@@ -775,7 +775,7 @@ export async function POST(request: NextRequest) {
   // dengan data dan tampilan sebelumnya.
   // =============================================
 
-  const ticketNumber = `WG-${randomUUID()
+  const ticketNumber = `IT-${randomUUID()
     .slice(0, 8)
     .toUpperCase()}`;
 
