@@ -1,3 +1,4 @@
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -11,9 +12,18 @@ const nextConfig: NextConfig = {
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
       },
     },
+  },
+
+  // URL publik untuk halaman pengajuan tiket client
+  async rewrites() {
+    return [
+      {
+        source: "/ticketingsystem",
+        destination: "/client/ticket",
+      },
+    ];
   },
 };
 

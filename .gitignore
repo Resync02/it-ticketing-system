@@ -1,8 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
+# ==========================================
+# DEPENDENCIES
+# ==========================================
+node_modules/
+.pnp/
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,32 +11,125 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ==========================================
+# NEXT.JS BUILD
+# ==========================================
+.next/
+out/
+build/
+dist/
+next-env.d.ts
 
-# next.js
-/.next/
-/out/
+# ==========================================
+# ENVIRONMENT VARIABLES - SENSITIVE
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.sample
 
-# production
-/build
+# ==========================================
+# DATABASE & BACKUP
+# ==========================================
+*.sql
+*.sql.gz
+*.dump
+*.bak
+*.backup
+*.db
+*.sqlite
+*.sqlite3
 
-# misc
-.DS_Store
+# ==========================================
+# PRIVATE KEYS & CERTIFICATES
+# ==========================================
 *.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.cert
 
-# debug
+# ==========================================
+# LOGS
+# ==========================================
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# ==========================================
+# CACHE
+# ==========================================
+.cache/
+.parcel-cache/
+.turbo/
+.vercel/
+.eslintcache
 *.tsbuildinfo
-next-env.d.ts
+
+# ==========================================
+# EDITOR & IDE
+# ==========================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================================
+# OPERATING SYSTEM
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# TEST & COVERAGE
+# ==========================================
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ==========================================
+# TEMPORARY FILES
+# ==========================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.old
+*.orig
+*.rej
+
+# ==========================================
+# UPLOADS / USER DATA
+# ==========================================
+uploads/
+private-uploads/
+storage/
+user-data/
+
+# ==========================================
+# DEPLOYMENT SECRETS
+# ==========================================
+.vercel
+.netlify/
+.serverless/
+.firebase/
+
+# ==========================================
+# LOCAL ENVIRONMENT
+# ==========================================
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
