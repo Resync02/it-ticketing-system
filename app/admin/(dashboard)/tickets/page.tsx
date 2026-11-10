@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import TicketDetailDialog, {
   type TicketDetail,
 } from "@/components/admin/ticket-detail-dialog";
+
 import {
   Search,
   SlidersHorizontal,
@@ -193,11 +194,19 @@ async function fetchTickets(): Promise<TicketItem[]> {
 // =============================================
 
 export default function TicketsPage() {
+  // ---------------------------------------------
+  // STATE DATA TIKET
+  // ---------------------------------------------
+
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [search, setSearch] = useState("");
   const [ticketsLoaded, setTicketsLoaded] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // ---------------------------------------------
+  // STATE FILTER
+  // ---------------------------------------------
 
   const [statusFilter, setStatusFilter] =
     useState<(typeof statuses)[number]>("Semua");
@@ -205,10 +214,21 @@ export default function TicketsPage() {
   const [priorityFilter, setPriorityFilter] =
     useState("Semua");
 
+  // ---------------------------------------------
+  // STATE DIALOG DAN NOTIFIKASI
+  // ---------------------------------------------
+
   const [selectedTicket, setSelectedTicket] =
     useState<TicketDetail | null>(null);
 
   const [approvalMessage, setApprovalMessage] = useState("");
+
+  // ---------------------------------------------
+  // STATE PAGINATION
+  // ---------------------------------------------
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   // =============================================
   // MEMUAT DAFTAR TIKET
@@ -360,6 +380,43 @@ export default function TicketsPage() {
       );
     });
   }, [tickets, search, statusFilter, priorityFilter]);
+
+  // =============================================
+  // RESET HALAMAN KETIKA FILTER BERUBAH
+  // =============================================
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, priorityFilter]);
+
+  // =============================================
+  // PERHITUNGAN PAGINATION
+  // =============================================
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTickets.length / pageSize)
+  );
+
+  // Menjaga halaman tetap valid ketika jumlah data berubah.
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+
+  // Data yang ditampilkan pada halaman aktif.
+  const paginatedTickets = filteredTickets.slice(
+    startIndex,
+    startIndex + pageSize
+  );
+
+  // Informasi rentang data.
+  const startItem =
+    filteredTickets.length === 0 ? 0 : startIndex + 1;
+
+  const endItem = Math.min(
+    startIndex + pageSize,
+    filteredTickets.length
+  );
 
   // =============================================
   // STATISTIK TIKET
@@ -520,16 +577,25 @@ export default function TicketsPage() {
 
         {/* ERROR */}
         {loadError && (
-          <p role="alert" className="px-5 py-4 text-sm text-red-600">
+          <p
+            role="alert"
+            className="px-5 py-4 text-sm text-red-600"
+          >
             {loadError}
           </p>
         )}
 
         {/* TABEL */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[950px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
+                {/* NOMOR URUT */}
+                <th className="w-14 px-4 py-3.5 text-center font-medium">
+                  No.
+                </th>
+
+                {/* ID TIKET */}
                 <th className="px-5 py-3.5 font-medium">
                   Tiket
                 </th>
@@ -558,7 +624,8 @@ export default function TicketsPage() {
 
             <tbody className="divide-y divide-slate-100">
 
-              {filteredTickets.map((ticket) => {
+              {/* DATA TIKET */}
+              {paginatedTickets.map((ticket, index) => {
                 const displayStatus = getDisplayStatus(ticket);
 
                 return (
@@ -566,7 +633,14 @@ export default function TicketsPage() {
                     key={ticket.id}
                     className="hover:bg-slate-50/70"
                   >
-                    {/* TIKET */}
+                    {/* NOMOR URUT */}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-medium text-slate-500">
+                        {startIndex + index + 1}
+                      </span>
+                    </td>
+
+                    {/* ID TIKET */}
                     <td className="px-5 py-4">
                       <p className="whitespace-nowrap font-medium text-[#172B4D]">
                         {ticket.id}
@@ -646,13 +720,27 @@ export default function TicketsPage() {
               })}
 
               {/* DATA KOSONG */}
-              {ticketsLoaded && filteredTickets.length === 0 && (
+              {ticketsLoaded &&
+                !loadError &&
+                filteredTickets.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-5 py-12 text-center text-sm text-slate-500"
+                    >
+                      Tidak ada tiket yang sesuai dengan filter.
+                    </td>
+                  </tr>
+                )}
+
+              {/* LOADING DI DALAM TABEL */}
+              {!ticketsLoaded && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-5 py-12 text-center text-sm text-slate-500"
                   >
-                    Tidak ada tiket yang sesuai dengan filter.
+                    Memuat data tiket...
                   </td>
                 </tr>
               )}
@@ -660,10 +748,81 @@ export default function TicketsPage() {
           </table>
         </div>
 
+        {/* PAGINATION */}
+        <div className="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+          {/* INFORMASI DATA */}
+          <div className="text-sm text-slate-500">
+            Menampilkan{" "}
+            <span className="font-medium text-slate-700">
+              {startItem}-{endItem}
+            </span>{" "}
+            dari{" "}
+            <span className="font-medium text-slate-700">
+              {filteredTickets.length}
+            </span>{" "}
+            tiket
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+
+            {/* JUMLAH TIKET PER HALAMAN */}
+            <div className="flex items-center gap-2">
+              <span className="whitespace-nowrap text-sm text-slate-500">
+                Baris per halaman
+              </span>
+
+              <select
+                aria-label="Jumlah tiket per halaman"
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setCurrentPage(1);
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+              </select>
+            </div>
+
+            {/* NAVIGASI HALAMAN */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage(safeCurrentPage - 1)
+                }
+                disabled={safeCurrentPage <= 1}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Sebelumnya
+              </button>
+
+              <span className="whitespace-nowrap px-2 text-sm text-slate-600">
+                {safeCurrentPage} / {totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage(safeCurrentPage + 1)
+                }
+                disabled={safeCurrentPage >= totalPages}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Berikutnya
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* FOOTER */}
         <div className="border-t border-slate-100 px-5 py-3">
           <p className="text-xs text-slate-500">
-            Menampilkan {filteredTickets.length} dari {tickets.length} tiket.
+            Menampilkan {filteredTickets.length} dari{" "}
+            {tickets.length} tiket.
           </p>
         </div>
       </section>

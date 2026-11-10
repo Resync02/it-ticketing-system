@@ -83,6 +83,17 @@ function formatDateTime(value: string | null | undefined) {
   );
 }
 
+  // Kosong = seluruh rentang tanggal.
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // =============================================
+  // STATE PAGINATION
+  // =============================================
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
 function formatCompletionDate(value: string | null | undefined) {
   if (!value) return "-";
 
@@ -269,6 +280,7 @@ export default function HistoryPage() {
       );
 
       setTickets(normalizedTickets);
+      setCurrentPage(1);
     } catch (error) {
       setLoadError(
         error instanceof Error
@@ -350,6 +362,34 @@ export default function HistoryPage() {
       return searchableText.includes(query);
     });
   }, [allCompletedTickets, search]);
+
+  // =============================================
+  // PAGINATION
+  // =============================================
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(completedTickets.length / pageSize)
+  );
+
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+
+  // Data yang ditampilkan pada halaman aktif.
+  const paginatedTickets = completedTickets.slice(
+    startIndex,
+    startIndex + pageSize
+  );
+
+  // Informasi jumlah data.
+  const startItem =
+    completedTickets.length === 0 ? 0 : startIndex + 1;
+
+  const endItem = Math.min(
+    startIndex + pageSize,
+    completedTickets.length
+  );
 
   async function exportExcel() {
     if (startDate && endDate && endDate < startDate) {
@@ -860,7 +900,10 @@ export default function HistoryPage() {
               type="date"
               value={startDate}
               max={endDate || undefined}
-              onChange={(event) => setStartDate(event.target.value)}
+              onChange={(event) => {
+                setStartDate(event.target.value);
+                setCurrentPage(1);
+              }}
               className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
             />
           </div>
@@ -878,7 +921,10 @@ export default function HistoryPage() {
               type="date"
               value={endDate}
               min={startDate || undefined}
-              onChange={(event) => setEndDate(event.target.value)}
+              onChange={(event) => {
+                setEndDate(event.target.value);
+                setCurrentPage(1);
+              }}
               className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
             />
           </div>
@@ -967,7 +1013,10 @@ export default function HistoryPage() {
 
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Cari ID, pelapor, divisi, masalah..."
               aria-label="Cari riwayat tiket"
               className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -975,133 +1024,211 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-3.5 font-medium">
-                  ID Tiket
-                </th>
+{/* TABEL HISTORY */}
+<div className="overflow-x-auto">
+  <table className="w-full min-w-[900px] text-left text-sm">
+    <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th className="w-14 px-4 py-3.5 text-center font-medium">
+          No.
+        </th>
 
-                <th className="px-4 py-3.5 font-medium">
-                  Pelapor
-                </th>
+        <th className="px-5 py-3.5 font-medium">
+          ID Tiket
+        </th>
 
-                <th className="px-4 py-3.5 font-medium">
-                  Masalah
-                </th>
+        <th className="px-4 py-3.5 font-medium">
+          Pelapor
+        </th>
 
-                <th className="px-4 py-3.5 font-medium">
-                  Prioritas
-                </th>
+        <th className="px-4 py-3.5 font-medium">
+          Masalah
+        </th>
 
-                <th className="px-5 py-3.5 font-medium">
-                  Status
-                </th>
-              </tr>
-            </thead>
+        <th className="px-4 py-3.5 font-medium">
+          Prioritas
+        </th>
 
-            <tbody className="divide-y divide-slate-100">
-              {completedTickets.map((ticket) => {
-                const isNotResolvable =
-                  isNotResolvableTicket(ticket);
+        <th className="px-5 py-3.5 font-medium">
+          Status
+        </th>
+      </tr>
+    </thead>
 
-                const displayStatus = getHistoryStatus(ticket);
+    <tbody className="divide-y divide-slate-100">
+      {/* DATA HISTORY */}
+      {paginatedTickets.map((ticket, index) => {
+        const isNotResolvable = isNotResolvableTicket(ticket);
+        const displayStatus = getHistoryStatus(ticket);
 
-                return (
-                  <tr
-                    key={ticket.id}
-                    className="hover:bg-slate-50/70"
-                  >
-                    {/* ID TIKET */}
-                    <td className="px-5 py-4">
-                      <p className="whitespace-nowrap font-medium text-[#172B4D]">
-                        {ticket.id}
-                      </p>
+        return (
+          <tr
+            key={ticket.database_id || ticket.id}
+            className="hover:bg-slate-50/70"
+          >
+            {/* NOMOR URUT */}
+            <td className="px-4 py-4 text-center">
+              <span className="font-medium text-slate-500">
+                {startIndex + index + 1}
+              </span>
+            </td>
 
-                      <p className="mt-1 text-xs text-slate-500">
-                        {formatCompletionDate(getClosureDate(ticket))}
-                      </p>
-                    </td>
+            {/* ID TIKET */}
+            <td className="px-5 py-4">
+              <p className="whitespace-nowrap font-medium text-[#172B4D]">
+                {ticket.id}
+              </p>
 
-                    {/* PELAPOR */}
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-slate-700">
-                        {ticket.name}
-                      </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {formatCompletionDate(getClosureDate(ticket))}
+              </p>
+            </td>
 
-                      <p className="mt-1 text-xs text-slate-500">
-                        {ticket.division} · {ticket.location}
-                      </p>
-                    </td>
+            {/* PELAPOR */}
+            <td className="px-4 py-4">
+              <p className="font-medium text-slate-700">
+                {ticket.name}
+              </p>
 
-                    {/* MASALAH */}
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-slate-700">
-                        {ticket.issue}
-                      </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {ticket.division} · {ticket.location}
+              </p>
+            </td>
 
-                      <p className="mt-1 text-xs text-slate-500">
-                        {ticket.device}
-                      </p>
-                    </td>
+            {/* MASALAH */}
+            <td className="px-4 py-4">
+              <p className="font-medium text-slate-700">
+                {ticket.issue}
+              </p>
 
-                    {/* PRIORITAS */}
-                    <td className="px-4 py-4">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                          ticket.priority === "Tinggi"
-                            ? "bg-red-50 text-red-700"
-                            : ticket.priority === "Medium"
-                              ? "bg-amber-50 text-amber-700"
-                              : ticket.priority === "Rendah"
-                                ? "bg-blue-50 text-blue-700"
-                                : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {ticket.priority ?? "Belum ditentukan"}
-                      </span>
-                    </td>
+              <p className="mt-1 text-xs text-slate-500">
+                {ticket.device}
+              </p>
+            </td>
 
-                    {/* STATUS */}
-                    <td className="px-5 py-4">
-                      <span
-                        className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
-                          isNotResolvable
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-emerald-50 text-emerald-700"
-                        }`}
-                      >
-                        {displayStatus}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+            {/* PRIORITAS */}
+            <td className="px-4 py-4">
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                  ticket.priority === "Tinggi"
+                    ? "bg-red-50 text-red-700"
+                    : ticket.priority === "Medium"
+                      ? "bg-amber-50 text-amber-700"
+                      : ticket.priority === "Rendah"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {ticket.priority ?? "Belum ditentukan"}
+              </span>
+            </td>
 
-              {completedTickets.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <History
-                      className="mx-auto mb-3 text-slate-300"
-                      size={32}
-                    />
+            {/* STATUS */}
+            <td className="px-5 py-4">
+              <span
+                className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+                  isNotResolvable
+                    ? "bg-amber-50 text-amber-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {displayStatus}
+              </span>
+            </td>
+          </tr>
+        );
+      })}
 
-                    <p className="text-sm font-medium text-slate-700">
-                      Belum ada riwayat tiket
-                    </p>
+      {/* DATA KOSONG */}
+      {completedTickets.length === 0 && (
+        <tr>
+          <td colSpan={6} className="px-5 py-12 text-center">
+            <History
+              className="mx-auto mb-3 text-slate-300"
+              size={32}
+            />
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      Tiket akan muncul setelah statusnya Selesai
-                      atau Tidak bisa diselesaikan.
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            <p className="text-sm font-medium text-slate-700">
+              Belum ada riwayat tiket
+            </p>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Tiket akan muncul setelah statusnya Selesai
+              atau Tidak bisa diselesaikan.
+            </p>
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
+{/* PAGINATION */}
+<div className="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+  {/* INFORMASI DATA */}
+  <div className="text-sm text-slate-500">
+    Menampilkan{" "}
+    <span className="font-medium text-slate-700">
+      {startItem}-{endItem}
+    </span>{" "}
+    dari{" "}
+    <span className="font-medium text-slate-700">
+      {completedTickets.length}
+    </span>{" "}
+    tiket
+  </div>
+
+  <div className="flex flex-wrap items-center gap-3">
+
+    {/* JUMLAH TIKET PER HALAMAN */}
+    <div className="flex items-center gap-2">
+      <span className="whitespace-nowrap text-sm text-slate-500">
+        Baris per halaman
+      </span>
+
+      <select
+        aria-label="Jumlah tiket per halaman"
+        value={pageSize}
+        onChange={(event) => {
+          setPageSize(Number(event.target.value));
+          setCurrentPage(1);
+        }}
+        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      >
+        <option value={5}>5</option>
+        <option value={10}>10</option>
+        <option value={15}>15</option>
+      </select>
     </div>
-  );
+
+    {/* NAVIGASI HALAMAN */}
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => setCurrentPage(safeCurrentPage - 1)}
+        disabled={safeCurrentPage <= 1}
+        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Sebelumnya
+      </button>
+
+      <span className="whitespace-nowrap px-2 text-sm text-slate-600">
+        {safeCurrentPage} / {totalPages}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => setCurrentPage(safeCurrentPage + 1)}
+        disabled={safeCurrentPage >= totalPages}
+        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Berikutnya
+      </button>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+);
 }
