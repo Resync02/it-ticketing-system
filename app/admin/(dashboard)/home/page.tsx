@@ -327,12 +327,12 @@ const stats = useMemo(() => {
             iconBackground="bg-emerald-50"
           />
           <StatCard
-            title="Pending"
-            value={stats.pending}
-            description="Menunggu persetujuan atau pengerjaan"
-            icon={Clock3}
-            iconColor="text-amber-700"
-            iconBackground="bg-amber-50"
+            title="Tidak Bisa Diselesaikan"
+            value={stats.notResolvable}
+            description="Tiket ditutup tanpa perbaikan"
+            icon={AlertCircle}
+            iconColor="text-red-700"
+            iconBackground="bg-red-50"
           />
           <StatCard
             title="Sedang Dikerjakan"
@@ -343,12 +343,12 @@ const stats = useMemo(() => {
             iconBackground="bg-violet-50"
           />
           <StatCard
-            title="Tidak Bisa Diselesaikan"
-            value={stats.notResolvable}
-            description="Tiket ditutup tanpa perbaikan"
-            icon={AlertCircle}
-            iconColor="text-red-700"
-            iconBackground="bg-red-50"
+            title="Pending"
+            value={stats.pending}
+            description="Menunggu persetujuan atau pengerjaan"
+            icon={Clock3}
+            iconColor="text-amber-700"
+            iconBackground="bg-amber-50"
           />
         </div>
         {loading && (
@@ -376,6 +376,7 @@ const stats = useMemo(() => {
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
+                <th className="px-4 py-3.5 font-medium">No.</th>
                 <th className="px-5 py-3.5 font-medium">ID Tiket</th>
                 <th className="px-4 py-3.5 font-medium">Pelapor</th>
                 <th className="px-4 py-3.5 font-medium">Masalah</th>
@@ -384,71 +385,89 @@ const stats = useMemo(() => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading && tickets.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-10 text-center text-slate-500">
-                    Memuat tiket terbaru...
-                  </td>
-                </tr>
-              ) : recentTickets.length > 0 ? (
-                recentTickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-slate-50/70">
-                    <td className="px-5 py-4">
-                      <p className="whitespace-nowrap font-medium text-[#172B4D]">
-                        {ticket.id}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">{ticket.time}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-slate-700">{ticket.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {ticket.division} · {ticket.location}
-                      </p>
-                    </td>
-                    <td className="max-w-[320px] px-4 py-4">
-                      <p className="line-clamp-2 font-medium text-slate-700">
-                        {ticket.issue}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">{ticket.device}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
-                          ticket.priority === "Tinggi"
-                            ? "bg-red-50 text-red-700"
-                            : ticket.priority === "Medium"
-                              ? "bg-amber-50 text-amber-700"
-                              : ticket.priority === "Rendah"
-                                ? "bg-blue-50 text-blue-700"
-                                : "bg-slate-50 text-slate-400"
-                        }`}
-                      >
-                        {ticket.priority ?? "Belum ditentukan"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[ticket.status] ?? "bg-slate-100 text-slate-700"}`}
-                      >
-                        {ticket.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <Inbox className="mx-auto mb-3 text-slate-300" size={32} />
-                    <p className="text-sm font-medium text-slate-700">
-                      Belum ada tiket
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Tiket yang dikirim melalui form akan tampil di sini.
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
+  {loading && tickets.length === 0 ? (
+    <tr>
+      <td colSpan={6} className="px-5 py-10 text-center text-slate-500">
+        Memuat tiket terbaru...
+      </td>
+    </tr>
+  ) : recentTickets.length > 0 ? (
+    recentTickets.map((ticket, index) => (
+      <tr key={ticket.id} className="hover:bg-slate-50/70">
+        {/* Nomor Urut */}
+        <td className="px-4 py-4 text-center">
+          <span className="text-sm font-medium text-slate-500">
+            {index + 1}
+          </span>
+        </td>
+
+        {/* ID Tiket */}
+        <td className="px-5 py-4">
+          <p className="whitespace-nowrap font-medium text-[#172B4D]">
+            {ticket.id}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">{ticket.time}</p>
+        </td>
+
+        {/* Pelapor */}
+        <td className="px-4 py-4">
+          <p className="font-medium text-slate-700">{ticket.name}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {ticket.division} · {ticket.location}
+          </p>
+        </td>
+
+        {/* Masalah */}
+        <td className="max-w-[320px] px-4 py-4">
+          <p className="line-clamp-2 font-medium text-slate-700">
+            {ticket.issue}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">{ticket.device}</p>
+        </td>
+
+        {/* Prioritas */}
+        <td className="px-4 py-4">
+          <span
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+              ticket.priority === "Tinggi"
+                ? "bg-red-50 text-red-700"
+                : ticket.priority === "Medium"
+                  ? "bg-amber-50 text-amber-700"
+                  : ticket.priority === "Rendah"
+                    ? "bg-blue-50 text-blue-700"
+                    : "bg-slate-50 text-slate-400"
+            }`}
+          >
+            {ticket.priority ?? "Belum ditentukan"}
+          </span>
+        </td>
+
+        {/* Status */}
+        <td className="px-5 py-4">
+          <span
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+              statusStyles[ticket.status] ?? "bg-slate-100 text-slate-700"
+            }`}
+          >
+            {ticket.status}
+          </span>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={6} className="px-5 py-12 text-center">
+        <Inbox className="mx-auto mb-3 text-slate-300" size={32} />
+        <p className="text-sm font-medium text-slate-700">
+          Belum ada tiket
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Tiket yang dikirim melalui form akan tampil di sini.
+        </p>
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       </section>
