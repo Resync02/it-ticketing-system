@@ -795,7 +795,7 @@ export async function POST(request: NextRequest) {
 
     // Nomor sementara hanya digunakan di dalam transaksi.
     // Nomor final dibuat dari ID AUTO_INCREMENT MySQL.
-    const temporaryTicketNumber = `TEMP-${randomUUID()}`;
+    const temporaryTicketNumber = `TMP-${randomUUID().slice(0, 20)}`;
 
     const [ticketResult] = await connection.execute(
       `
