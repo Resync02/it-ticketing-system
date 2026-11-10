@@ -83,17 +83,6 @@ function formatDateTime(value: string | null | undefined) {
   );
 }
 
-  // Kosong = seluruh rentang tanggal.
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
-  // =============================================
-  // STATE PAGINATION
-  // =============================================
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-
 function formatCompletionDate(value: string | null | undefined) {
   if (!value) return "-";
 
@@ -154,9 +143,13 @@ export default function HistoryPage() {
   const [exportError, setExportError] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
-  // Kosong = seluruh rentang tanggal.
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+// KOSONG = SELURUH RENTANG TANGGAL
+const [startDate, setStartDate] = useState("");
+const [endDate, setEndDate] = useState("");
+
+// STATE PAGINATION
+const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(5);
 
   const fetchTickets = useCallback(async () => {
     setLoaded(false);
