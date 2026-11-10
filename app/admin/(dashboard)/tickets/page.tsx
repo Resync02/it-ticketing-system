@@ -751,19 +751,6 @@ export default function TicketsPage() {
         {/* PAGINATION */}
         <div className="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 
-          {/* INFORMASI DATA */}
-          <div className="text-sm text-slate-500">
-            Menampilkan{" "}
-            <span className="font-medium text-slate-700">
-              {startItem}-{endItem}
-            </span>{" "}
-            dari{" "}
-            <span className="font-medium text-slate-700">
-              {filteredTickets.length}
-            </span>{" "}
-            tiket
-          </div>
-
           <div className="flex flex-wrap items-center gap-3">
 
             {/* JUMLAH TIKET PER HALAMAN */}

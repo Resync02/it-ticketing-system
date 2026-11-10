@@ -769,15 +769,9 @@ export async function POST(request: NextRequest) {
 
   photoMimeType = photoValue.type;
 
-  // =============================================
-  // MEMBUAT NOMOR TIKET
-  // Format dipertahankan agar kompatibel
-  // dengan data dan tampilan sebelumnya.
-  // =============================================
-
-  const ticketNumber = `IT-${randomUUID()
-    .slice(0, 8)
-    .toUpperCase()}`;
+  // Nomor tiket akan dibuat setelah INSERT,
+  // berdasarkan ID AUTO_INCREMENT dari MySQL.
+  let ticketNumber = "";
 
   // =============================================
   // TRANSAKSI PEMBUATAN TIKET
@@ -799,6 +793,10 @@ export async function POST(request: NextRequest) {
     // INSERT TIKET
     // =========================================
 
+    // Nomor sementara hanya digunakan di dalam transaksi.
+    // Nomor final dibuat dari ID AUTO_INCREMENT MySQL.
+    const temporaryTicketNumber = `TEMP-${randomUUID()}`;
+
     const [ticketResult] = await connection.execute(
       `
         INSERT INTO tickets (
@@ -819,7 +817,7 @@ export async function POST(request: NextRequest) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
       `,
       [
-        ticketNumber,
+        temporaryTicketNumber,
         reporter_name,
         reporter_email,
         reporter_phone,
@@ -839,6 +837,19 @@ export async function POST(request: NextRequest) {
         insertId: number | bigint;
       }
     ).insertId;
+
+    // Format nomor tiket: IT-SUP0001, IT-SUP0002, dst.
+    ticketNumber = `IT-SUP${String(ticketId).padStart(4, "0")}`;
+
+    // Simpan nomor tiket final sebelum transaksi di-commit.
+    await connection.execute(
+      `
+        UPDATE tickets
+        SET ticket_number = ?
+        WHERE id = ?
+      `,
+      [ticketNumber, ticketId]
+    );
 
     // =========================================
     // INSERT FOTO
