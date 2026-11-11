@@ -806,12 +806,6 @@ export default function TicketsPage() {
         </div>
 
         {/* FOOTER */}
-        <div className="border-t border-slate-100 px-5 py-3">
-          <p className="text-xs text-slate-500">
-            Menampilkan {filteredTickets.length} dari{" "}
-            {tickets.length} tiket.
-          </p>
-        </div>
       </section>
 
       {/* DIALOG DETAIL */}
