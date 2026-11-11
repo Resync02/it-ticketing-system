@@ -380,7 +380,7 @@ export default function ClientTicketPage() {
               className="text-sm font-semibold text-slate-800"
               htmlFor="deviceType"
             >
-              Jenis Permasalahan *
+              Kategori Permasalahan *
             </label>
 
             <textarea
@@ -391,7 +391,7 @@ export default function ClientTicketPage() {
               onChange={(e) => setDeviceType(e.target.value)}
               required
               maxLength={2000}
-              placeholder="Contoh: Komputer, Laptop, Printer, Scanner, atau nama aplikasi/layanan yang bermasalah."
+              placeholder="Contoh: Hardware: Komputer, Laptop, Printer. Software : office, adobe, atau nama aplikasi/layanan yang bermasalah."
             />
           </div>
 

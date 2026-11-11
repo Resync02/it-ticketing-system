@@ -408,8 +408,8 @@ const [pageSize, setPageSize] = useState(5);
         "Nomor Telepon / WhatsApp": ticket.reporter_phone || "-",
         "Divisi": ticket.division,
         "Lokasi": ticket.location,
-        "Perangkat": ticket.device,
-        "Tipe Perangkat / Identitas": ticket.device_type || "-",
+        "Permasalahan": ticket.device,
+        "Kategori Masalah": ticket.device_type || "-",
         "Pernah Terjadi Sebelumnya":
           ticket.previous_occurrence || "-",
         "Deskripsi Masalah": ticket.issue,
@@ -439,8 +439,8 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 24 }, // Telepon
         { wch: 22 }, // Divisi
         { wch: 16 }, // Lokasi
-        { wch: 22 }, // Perangkat
-        { wch: 34 }, // Tipe Perangkat
+        { wch: 22 }, // Permasalahan
+        { wch: 34 }, // Kategori Masalah
         { wch: 24 }, // Riwayat
         { wch: 48 }, // Deskripsi
         { wch: 48 }, // Dampak
