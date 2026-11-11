@@ -24,6 +24,28 @@ const ALLOWED_PREVIOUS_VALUES = [
   "Tidak Tahu",
 ] as const;
 
+const DIVISION_CODES: Record<string, string> = {
+  "Management": "MNG",
+  "Business Development": "BDD",
+  "Engineering": "ENG",
+  "Production & Maintenance": "PMT",
+  "Logistic": "LOG",
+  "Purchasing": "PUR",
+  "Finance": "FIN",
+  "Accounting & Tax": "ACT",
+  "HRGA": "HGA",
+  "IT Support": "ITS",
+};
+
+const ALLOWED_PROBLEM_CATEGORIES = [
+  "Hardware/Perangkat",
+  "Software/Aplikasi",
+  "CCTV",
+  "Access",
+  "Konektivitas",
+  "ERP",
+] as const;
+
 const ALLOWED_OUTCOMES = [
   "Selesai",
   "Belum selesai",
@@ -623,6 +645,24 @@ export async function POST(request: NextRequest) {
   // =============================================
   // VALIDASI EMAIL
   // =============================================
+  if (!Object.prototype.hasOwnProperty.call(DIVISION_CODES, division)) {
+    return NextResponse.json(
+      { success: false, message: "Pilihan divisi tidak valid." },
+      { status: 400 }
+    );
+  }
+
+  if (
+    !ALLOWED_PROBLEM_CATEGORIES.includes(
+      device as (typeof ALLOWED_PROBLEM_CATEGORIES)[number]
+    )
+  ) {
+    return NextResponse.json(
+      { success: false, message: "Kategori permasalahan tidak valid." },
+      { status: 400 }
+    );
+  }
+
 
   if (
     reporter_email &&
@@ -793,8 +833,44 @@ export async function POST(request: NextRequest) {
     // INSERT TIKET
     // =========================================
 
-    // Nomor sementara hanya digunakan di dalam transaksi.
-    // Nomor final dibuat dari ID AUTO_INCREMENT MySQL.
+    // Ambil kode divisi dan kunci counter divisi agar aman
+    // ketika beberapa pengguna mengirim tiket bersamaan.
+    const divisionCode = DIVISION_CODES[division];
+
+    await connection.execute(
+      `
+        INSERT IGNORE INTO ticket_division_counters
+          (division_code, last_number)
+        VALUES (?, 0)
+      `,
+      [divisionCode]
+    );
+
+    const [counterRows] = await connection.execute(
+      `
+        SELECT last_number
+        FROM ticket_division_counters
+        WHERE division_code = ?
+        FOR UPDATE
+      `,
+      [divisionCode]
+    );
+
+    const currentDivisionNumber = Number(
+      (counterRows as Array<{ last_number: number | string }>)[0]?.last_number ?? 0
+    );
+    const nextDivisionNumber = currentDivisionNumber + 1;
+
+    await connection.execute(
+      `
+        UPDATE ticket_division_counters
+        SET last_number = ?
+        WHERE division_code = ?
+      `,
+      [nextDivisionNumber, divisionCode]
+    );
+
+    // Nomor sementara diganti dengan nomor final setelah ID global tersedia.
     const temporaryTicketNumber = `TMP-${randomUUID().slice(0, 20)}`;
 
     const [ticketResult] = await connection.execute(
@@ -838,8 +914,13 @@ export async function POST(request: NextRequest) {
       }
     ).insertId;
 
-    // Format nomor tiket: IT-SUP0001, IT-SUP0002, dst.
-    ticketNumber = `IT-SUP${String(ticketId).padStart(4, "0")}`;
+    // Format: IT-[KODE DIVISI]-[URUTAN DIVISI]-[URUTAN GLOBAL].
+    ticketNumber = [
+      "IT",
+      divisionCode,
+      String(nextDivisionNumber).padStart(2, "0"),
+      String(ticketId).padStart(3, "0"),
+    ].join("-");
 
     // Simpan nomor tiket final sebelum transaksi di-commit.
     await connection.execute(

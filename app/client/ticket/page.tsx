@@ -9,30 +9,27 @@ import {
 } from "lucide-react";
 
 const divisions = [
-  "Accounting & Tax",
-  "Engineering",
+  "Management",
   "Business Development",
-  "HRGA",
-  "Purchasing",
+  "Engineering",
+  "Production & Maintenance",
   "Logistic",
-  "Produksi",
+  "Purchasing",
   "Finance",
+  "Accounting & Tax",
+  "HRGA",
+  "IT Support",
 ];
 
 const locations = ["Cakung", "Pusat"];
 
-const devices = [
-  "Laptop",
-  "PC / Komputer",
-  "Printer",
-  "Scanner",
-  "Internet / WiFi / LAN",
-  "ERP",
+const problemCategories = [
+  "Hardware/Perangkat",
+  "Software/Aplikasi",
   "CCTV",
-  "Attendance Device",
-  "Username / Password",
-  "Software",
-  "Folder / File",
+  "Access",
+  "Konektivitas",
+  "ERP",
 ];
 
 const inputClass =
@@ -367,9 +364,9 @@ export default function ClientTicketPage() {
               onChange={(e) => setDevice(e.target.value)}
               required
             >
-              <option value="">Pilih Permasalahan</option>
+              <option value="">Pilih kategori permasalahan</option>
 
-              {devices.map((item) => (
+              {problemCategories.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
@@ -383,7 +380,7 @@ export default function ClientTicketPage() {
               className="text-sm font-semibold text-slate-800"
               htmlFor="deviceType"
             >
-              Tipe Perangkat / Identitas *
+              Jenis Permasalahan *
             </label>
 
             <textarea
@@ -394,7 +391,28 @@ export default function ClientTicketPage() {
               onChange={(e) => setDeviceType(e.target.value)}
               required
               maxLength={2000}
-              placeholder="Contoh: Lenovo ThinkPad E14 Gen 4, hostname WG-IT-014, atau nama aplikasi/akun yang bermasalah."
+              placeholder="Contoh: Komputer, Laptop, Printer, Scanner, atau nama aplikasi/layanan yang bermasalah."
+            />
+          </div>
+
+          {/* Kendala */}
+          <div>
+            <label
+              className="text-sm font-semibold text-slate-800"
+              htmlFor="issue"
+            >
+              Kendala yang Dialami *
+            </label>
+
+            <textarea
+              id="issue"
+              className={inputClass}
+              rows={4}
+              value={issue}
+              onChange={(e) => setIssue(e.target.value)}
+              maxLength={10000}
+              required
+              placeholder="Jelaskan kendala, pesan error, kapan mulai terjadi, dan langkah yang sudah dicoba."
             />
           </div>
 
@@ -423,27 +441,6 @@ export default function ClientTicketPage() {
               ))}
             </div>
           </fieldset>
-
-          {/* Kendala */}
-          <div>
-            <label
-              className="text-sm font-semibold text-slate-800"
-              htmlFor="issue"
-            >
-              Kendala yang Dialami *
-            </label>
-
-            <textarea
-              id="issue"
-              className={inputClass}
-              rows={4}
-              value={issue}
-              onChange={(e) => setIssue(e.target.value)}
-              maxLength={10000}
-              required
-              placeholder="Jelaskan kendala, pesan error, kapan mulai terjadi, dan langkah yang sudah dicoba."
-            />
-          </div>
 
           {/* Dampak */}
           <div>
