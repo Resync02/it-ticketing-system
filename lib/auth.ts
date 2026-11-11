@@ -47,7 +47,6 @@ export async function createAdminSession(admin: {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_DURATION,
   });
 }
 

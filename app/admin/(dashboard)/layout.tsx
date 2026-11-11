@@ -1,7 +1,7 @@
-
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/admin/admin-shell";
+import AdminSessionGuard from "@/components/admin/admin-session-guard";
 import { getAdminSession } from "@/lib/auth";
 
 async function ProtectedDashboard({
@@ -15,7 +15,11 @@ async function ProtectedDashboard({
     redirect("/admin/login");
   }
 
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminSessionGuard>
+      <AdminShell>{children}</AdminShell>
+    </AdminSessionGuard>
+  );
 }
 
 export default function DashboardLayout({

@@ -35,7 +35,21 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.replace(data.redirectTo);
+      // Penanda ini hanya tersimpan pada tab browser yang melakukan login.
+      // sessionStorage akan hilang saat tab ditutup (di luar pemulihan sesi browser).
+      try {
+        window.sessionStorage.setItem("wg_admin_tab_session", "active");
+      } catch {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          cache: "no-store",
+        }).catch(() => undefined);
+
+        setError("Browser tidak mengizinkan penyimpanan sesi tab. Aktifkan session storage lalu coba lagi.");
+        return;
+      }
+
+      router.replace(data.redirectTo || "/admin/home");
       router.refresh();
     } catch {
       setError("Tidak dapat terhubung ke server.");
