@@ -438,3 +438,120 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+// =========================================
+// DELETE: MENGHAPUS PIC YANG TIDAK DIGUNAKAN
+// ADMIN ONLY
+// =========================================
+
+export async function DELETE(request: NextRequest) {
+  const session = await getAdminSession();
+
+  if (!session) {
+    return jsonError("Unauthorized", 401);
+  }
+
+  const body = await getRequestBody(request);
+
+  if (!body) {
+    return jsonError(
+      "Format permintaan tidak valid.",
+      400
+    );
+  }
+
+  const id = validatePICId(body.id);
+
+  if (id === null) {
+    return jsonError(
+      "ID PIC tidak valid.",
+      400
+    );
+  }
+
+  let connection: Awaited<ReturnType<typeof pool.getConnection>> | null = null;
+
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Kunci baris PIC agar proses penugasan tiket tidak berlomba
+    // dengan proses penghapusan pada saat yang sama.
+    const [picRows] = await connection.execute(
+      `
+        SELECT id
+        FROM ticket_pics
+        WHERE id = ?
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [id]
+    );
+
+    if (!(picRows as unknown[]).length) {
+      await connection.rollback();
+      return jsonError("PIC tidak ditemukan.", 404);
+    }
+
+    // Pertahankan relasi PIC pada seluruh riwayat tiket.
+    // PIC yang pernah ditugaskan ke tiket tidak boleh dihapus.
+    const [ticketRows] = await connection.execute(
+      `
+        SELECT id
+        FROM tickets
+        WHERE assigned_pic_id = ?
+        LIMIT 1
+      `,
+      [id]
+    );
+
+    if ((ticketRows as unknown[]).length) {
+      await connection.rollback();
+      return jsonError(
+        "PIC tidak dapat dihapus karena masih tercatat pada riwayat tiket. Nonaktifkan PIC tersebut sebagai gantinya.",
+        409
+      );
+    }
+
+    const [deleteResult] = await connection.execute(
+      `
+        DELETE FROM ticket_pics
+        WHERE id = ?
+      `,
+      [id]
+    );
+
+    const affectedRows = (
+      deleteResult as { affectedRows: number }
+    ).affectedRows;
+
+    if (affectedRows !== 1) {
+      await connection.rollback();
+      return jsonError("PIC tidak ditemukan.", 404);
+    }
+
+    await connection.commit();
+
+    return NextResponse.json({
+      success: true,
+      message: "PIC berhasil dihapus.",
+    });
+  } catch (error) {
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("DELETE PIC rollback error:", rollbackError);
+      }
+    }
+
+    console.error("DELETE PIC error:", error);
+
+    return jsonError(
+      "Gagal menghapus PIC.",
+      500
+    );
+  } finally {
+    connection?.release();
+  }
+}

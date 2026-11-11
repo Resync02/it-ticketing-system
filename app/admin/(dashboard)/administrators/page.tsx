@@ -8,6 +8,7 @@ import {
   Users,
   Power,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 
 type PIC = {
@@ -40,6 +41,7 @@ export default function AdministratorsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // =========================================
   // INITIAL FETCH
@@ -214,6 +216,52 @@ export default function AdministratorsPage() {
       );
     } finally {
       setTogglingId(null);
+    }
+  }
+
+  // =========================================
+  // HAPUS PIC YANG TIDAK DIGUNAKAN
+  // =========================================
+
+  async function deletePIC(pic: PIC) {
+    const confirmed = window.confirm(
+      `Hapus PIC "${pic.name}" secara permanen?\n\n` +
+        "Data PIC yang sudah pernah digunakan pada tiket tidak dapat dihapus agar riwayat penanganan tetap terjaga."
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(pic.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/admin/pics", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: pic.id }),
+      });
+
+      const result = (await response.json()) as PICResponse;
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Gagal menghapus PIC."
+        );
+      }
+
+      await loadPics();
+      setSuccess(`PIC "${pic.name}" berhasil dihapus.`);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal menghapus PIC."
+      );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -457,24 +505,40 @@ export default function AdministratorsPage() {
                     {pic.is_active ? "Aktif" : "Nonaktif"}
                   </span>
 
-                  <button
-                    type="button"
-                    disabled={togglingId !== null}
-                    onClick={() => void togglePIC(pic.id)}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                      pic.is_active
-                        ? "border-red-200 text-red-600 hover:bg-red-50"
-                        : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    }`}
-                  >
-                    <Power size={14} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={
+                        togglingId !== null || deletingId !== null
+                      }
+                      onClick={() => void togglePIC(pic.id)}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                        pic.is_active
+                          ? "border-red-200 text-red-600 hover:bg-red-50"
+                          : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <Power size={14} />
 
-                    {togglingId === pic.id
-                      ? "Memproses..."
-                      : pic.is_active
-                        ? "Nonaktifkan"
-                        : "Aktifkan"}
-                  </button>
+                      {togglingId === pic.id
+                        ? "Memproses..."
+                        : pic.is_active
+                          ? "Nonaktifkan"
+                          : "Aktifkan"}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={
+                        togglingId !== null || deletingId !== null
+                      }
+                      onClick={() => void deletePIC(pic)}
+                      className="flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 size={14} />
+                      {deletingId === pic.id ? "Menghapus..." : "Hapus"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
