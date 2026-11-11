@@ -403,7 +403,6 @@ const [pageSize, setPageSize] = useState(5);
       // =============================================
 
       const data = allCompletedTickets.map((ticket) => ({
-        "ID Database": ticket.database_id || "-",
         "Nomor Tiket": ticket.id,
         "Nama Pelapor": ticket.name,
         "Nomor Telepon / WhatsApp": ticket.reporter_phone || "-",
@@ -416,12 +415,9 @@ const [pageSize, setPageSize] = useState(5);
         "Deskripsi Masalah": ticket.issue,
         "Kendala dan Dampak": ticket.impact || "-",
         "Prioritas": ticket.priority ?? "Belum ditentukan",
-        "Status": getHistoryStatus(ticket),
-        "ID PIC": ticket.assigned_pic_id || "-",
         "Nama PIC": ticket.assigned_pic_name || "Belum ditetapkan",
         "Tanggal Pengajuan": formatDateTime(ticket.time),
         "Tanggal Ditutup": formatDateTime(getClosureDate(ticket)),
-        "Tanggal Update Terakhir": formatDateTime(ticket.updated_at),
         "Analisa Awal": ticket.initial_analysis || "-",
         "Penyebab Masalah": ticket.root_cause || "-",
         "Tindakan Perbaikan": ticket.corrective_action || "-",
@@ -430,32 +426,14 @@ const [pageSize, setPageSize] = useState(5);
           ? ticket.part_replaced_description || "-"
           : "-",
         "Biaya (Rp)": ticket.component_cost ?? 0,
-        "Hasil Penanganan": ticket.resolution_result || "-",
         "Alasan Tidak Bisa Diselesaikan":
           ticket.resolution_reason || "-",
-        "ID Foto Kendala": ticket.photoAttachmentId || "-",
-        "Nama File Foto Kendala": ticket.photoFileName || "-",
-        "Format Foto Kendala": ticket.photoMimeType || "-",
-        "Ukuran Foto Kendala (Byte)": ticket.photoFileSize ?? "-",
-        "ID Bukti Penyelesaian": ticket.proofAttachmentId || "-",
-        "Nama File Bukti Penyelesaian": ticket.proofFileName || "-",
-        "Format Bukti Penyelesaian": ticket.proofMimeType || "-",
-        "Ukuran Bukti Penyelesaian (Byte)": ticket.proofFileSize ?? "-",
-        "Jumlah Seluruh Lampiran": ticket.attachments.length,
-        "Daftar Nama Seluruh Lampiran":
-          ticket.attachments
-            .map(
-              (attachment) =>
-                `${attachment.category}: ${attachment.file_name}`
-            )
-            .join(" | ") || "-",
       }));
 
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(data);
 
       worksheet["!cols"] = [
-        { wch: 14 }, // ID Database
         { wch: 20 }, // Nomor Tiket
         { wch: 24 }, // Nama Pelapor
         { wch: 24 }, // Telepon
@@ -467,30 +445,16 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 48 }, // Deskripsi
         { wch: 48 }, // Dampak
         { wch: 16 }, // Prioritas
-        { wch: 28 }, // Status
-        { wch: 12 }, // ID PIC
         { wch: 24 }, // Nama PIC
         { wch: 24 }, // Pengajuan
         { wch: 24 }, // Penutupan
-        { wch: 24 }, // Update
         { wch: 44 }, // Analisa
         { wch: 44 }, // Penyebab
         { wch: 48 }, // Tindakan
         { wch: 14 }, // Part
         { wch: 32 }, // Deskripsi part
         { wch: 18 }, // Biaya
-        { wch: 28 }, // Hasil
         { wch: 48 }, // Alasan
-        { wch: 20 }, // ID Foto
-        { wch: 32 }, // Nama Foto
-        { wch: 22 }, // Format Foto
-        { wch: 20 }, // Ukuran Foto
-        { wch: 24 }, // ID Bukti
-        { wch: 32 }, // Nama Bukti
-        { wch: 22 }, // Format Bukti
-        { wch: 24 }, // Ukuran Bukti
-        { wch: 14 }, // Jumlah lampiran
-        { wch: 58 }, // Daftar lampiran
       ];
 
       XLSX.utils.book_append_sheet(
