@@ -69,6 +69,10 @@ type Props = {
       "Menunggu persetujuan" | "Tidak bisa diselesaikan"
     >
   ) => void;
+  onPicAssigned?: (
+    ticketId: string,
+    pic: { id: string; name: string }
+  ) => void;
 };
 
 function formatSubmissionDateTime(value: string) {
@@ -105,14 +109,22 @@ export default function TicketDetailDialog({
   onClose,
   onApprove,
   onUpdateStatus,
+  onPicAssigned,
 }: Props) {
   const [priority, setPriority] = useState<
     "Rendah" | "Medium" | "Tinggi"
   >("Rendah");
 
-  const [isPhotoOpen, setIsPhotoOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<{
+    src: string;
+    title: string;
+  } | null>(null);
 
   // PIC
+  const [assignedPic, setAssignedPic] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [pics, setPics] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -162,6 +174,7 @@ export default function TicketDetailDialog({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPriority(ticket?.priority ?? "Rendah");
     setPicId(ticket?.assigned_pic_id ?? "");
+    setAssignedPic(null);
     setPicMessage("");
 
     setAnalysis(ticket?.initial_analysis ?? "");
@@ -182,7 +195,7 @@ export default function TicketDetailDialog({
 
     setProof(null);
     setWorkflowMessage("");
-    setIsPhotoOpen(false);
+    setImagePreview(null);
   }, [
     ticket?.id,
     ticket?.priority,
@@ -254,11 +267,25 @@ export default function TicketDetailDialog({
         );
       }
 
-      setPicMessage(
-        "PIC berhasil ditetapkan dan dikunci."
+      const selectedPic = pics.find(
+        (pic) => String(pic.id) === String(picId)
       );
 
-      window.location.reload();
+      if (!selectedPic) {
+        throw new Error(
+          "PIC berhasil diproses, tetapi nama PIC tidak ditemukan. Muat ulang data tiket untuk memeriksa penetapan."
+        );
+      }
+
+      const assigned = {
+        id: String(selectedPic.id),
+        name: selectedPic.name,
+      };
+
+      setAssignedPic(assigned);
+      setPicId(assigned.id);
+      onPicAssigned?.(ticket.id, assigned);
+      setPicMessage("PIC berhasil ditetapkan dan dikunci.");
     } catch (error) {
       setPicMessage(
         error instanceof Error
@@ -450,13 +477,13 @@ export default function TicketDetailDialog({
     }
   }
 
-  // Menutup popup gambar menggunakan tombol Escape
+  // Menutup preview foto lampiran maupun bukti dengan tombol Escape.
   useEffect(() => {
-    if (!isPhotoOpen) return;
+    if (!imagePreview) return;
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setIsPhotoOpen(false);
+        setImagePreview(null);
       }
     }
 
@@ -465,9 +492,18 @@ export default function TicketDetailDialog({
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isPhotoOpen]);
+  }, [imagePreview]);
 
   if (!ticket) return null;
+
+  const currentAssignedPic =
+    assignedPic ??
+    (ticket.assigned_pic_id
+      ? {
+          id: String(ticket.assigned_pic_id),
+          name: ticket.assigned_pic_name || "PIC telah ditetapkan",
+        }
+      : null);
 
 const ticketId = ticket.id;
 
@@ -495,6 +531,12 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
   const photoUrl = ticket.photoAttachmentId
     ? `/api/tickets/attachments/${encodeURIComponent(
         ticket.photoAttachmentId
+      )}`
+    : null;
+
+  const proofUrl = ticket.proofAttachmentId
+    ? `/api/tickets/attachments/${encodeURIComponent(
+        ticket.proofAttachmentId
       )}`
     : null;
 
@@ -649,7 +691,12 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                 <div className="mt-3">
                   <button
                     type="button"
-                    onClick={() => setIsPhotoOpen(true)}
+                    onClick={() =>
+                      setImagePreview({
+                        src: photoUrl,
+                        title: "Foto Lampiran",
+                      })
+                    }
                     aria-label={`Perbesar foto lampiran tiket ${ticket.id}`}
                     className="group relative block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left"
                   >
@@ -688,7 +735,7 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                   Penanggung Jawab (PIC)
                 </h3>
 
-                {ticket.assigned_pic_id ? (
+                {currentAssignedPic ? (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                     <div className="flex items-center gap-2 text-emerald-700">
                       <LockKeyhole size={18} />
@@ -699,8 +746,7 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                     </div>
 
                     <p className="mt-2 text-base font-semibold text-slate-900">
-                      {ticket.assigned_pic_name ||
-                        "PIC telah ditetapkan"}
+                      {currentAssignedPic.name}
                     </p>
 
                     <div className="mt-3 flex items-center gap-2 text-xs text-emerald-700">
@@ -745,8 +791,12 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
 
                     {picMessage && (
                       <p
-                        role="alert"
-                        className="text-sm text-red-600"
+                        role="status"
+                        className={`text-sm ${
+                          picMessage.toLowerCase().includes("berhasil")
+                            ? "text-emerald-700"
+                            : "text-red-600"
+                        }`}
                       >
                         {picMessage}
                       </p>
@@ -1110,20 +1160,47 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
             )}
 
             {/* BUKTI PENYELESAIAN YANG SUDAH TERSIMPAN */}
-            {ticket.proofAttachmentId && (
+            {proofUrl && (
               <section className="rounded-xl border border-emerald-200 p-4">
-                <h3 className="text-sm font-semibold text-slate-800">
-                  Bukti penyelesaian
-                </h3>
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={18} className="text-emerald-600" />
+                  <h3 className="text-sm font-semibold text-slate-800">
+                    Bukti penyelesaian
+                  </h3>
+                </div>
 
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/tickets/attachments/${encodeURIComponent(
-                    ticket.proofAttachmentId
-                  )}`}
-                  alt="Bukti penyelesaian tiket"
-                  className="mt-3 max-h-64 rounded-lg object-contain"
-                />
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImagePreview({
+                        src: proofUrl,
+                        title: "Bukti Penyelesaian",
+                      })
+                    }
+                    aria-label={`Perbesar bukti penyelesaian tiket ${ticket.id}`}
+                    className="group relative block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={proofUrl}
+                      alt={`Bukti penyelesaian tiket ${ticket.id}`}
+                      className="max-h-[320px] w-full object-contain transition duration-200 group-hover:scale-[1.01]"
+                      loading="lazy"
+                    />
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/0 transition group-hover:bg-slate-950/20">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-slate-800 opacity-0 shadow-lg transition group-hover:opacity-100">
+                        <ZoomIn size={17} />
+                        Perbesar gambar
+                      </span>
+                    </div>
+                  </button>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    Klik gambar untuk melihat ukuran penuh.
+                  </p>
+                </div>
               </section>
             )}
 
@@ -1271,16 +1348,16 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
         </section>
       </div>
 
-      {/* POPUP PREVIEW GAMBAR */}
-      {isPhotoOpen && photoUrl && (
+      {/* POPUP PREVIEW FOTO LAMPIRAN / BUKTI PENYELESAIAN */}
+      {imagePreview && (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4 sm:p-8"
           role="dialog"
           aria-modal="true"
-          aria-label="Pratinjau foto lampiran"
+          aria-label={`Pratinjau ${imagePreview.title.toLowerCase()}`}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setIsPhotoOpen(false);
+              setImagePreview(null);
             }
           }}
         >
@@ -1288,7 +1365,7 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
             <div className="mb-3 flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-white">
-                  Foto Lampiran
+                  {imagePreview.title}
                 </p>
 
                 <p className="mt-1 text-xs text-slate-300">
@@ -1298,7 +1375,7 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
 
               <button
                 type="button"
-                onClick={() => setIsPhotoOpen(false)}
+                onClick={() => setImagePreview(null)}
                 aria-label="Tutup pratinjau gambar"
                 className="rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
               >
@@ -1309,8 +1386,8 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-black/30">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={photoUrl}
-                alt={`Foto lampiran tiket ${ticket.id}`}
+                src={imagePreview.src}
+                alt={`${imagePreview.title} tiket ${ticket.id}`}
                 className="max-h-[78vh] max-w-full rounded-lg object-contain"
               />
             </div>
