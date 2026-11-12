@@ -49,6 +49,7 @@ type TicketItem = {
   component_cost: number | null;
   resolution_result: string;
   resolution_reason: string;
+  resolution_completed_reason: string;
   photoAttachmentId: string;
   photoFileName: string;
   photoMimeType: string;
@@ -236,6 +237,9 @@ const [pageSize, setPageSize] = useState(5);
 
           resolution_result: String(ticket.resolution_result ?? ""),
           resolution_reason: String(ticket.resolution_reason ?? ""),
+          resolution_completed_reason: String(
+            ticket.resolution_completed_reason ?? ""
+          ),
 
           photoAttachmentId: String(ticket.photoAttachmentId ?? ""),
           photoFileName: String(ticket.photoFileName ?? ""),
@@ -347,6 +351,7 @@ const [pageSize, setPageSize] = useState(5);
         ticket.assigned_pic_name,
         ticket.resolution_result,
         ticket.resolution_reason,
+        ticket.resolution_completed_reason,
         getHistoryStatus(ticket),
       ]
         .join(" ")
@@ -426,6 +431,8 @@ const [pageSize, setPageSize] = useState(5);
           ? ticket.part_replaced_description || "-"
           : "-",
         "Biaya (Rp)": ticket.component_cost ?? 0,
+        "Alasan Diselesaikan":
+          ticket.resolution_completed_reason || "-",
         "Alasan Tidak Bisa Diselesaikan":
           ticket.resolution_reason || "-",
       }));
@@ -454,7 +461,8 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 14 }, // Part
         { wch: 32 }, // Deskripsi part
         { wch: 18 }, // Biaya
-        { wch: 48 }, // Alasan
+        { wch: 48 }, // Alasan Diselesaikan
+        { wch: 48 }, // Alasan Tidak Bisa Diselesaikan
       ];
 
       XLSX.utils.book_append_sheet(
@@ -480,6 +488,8 @@ const [pageSize, setPageSize] = useState(5);
           : "-",
         "Biaya (Rp)": ticket.component_cost ?? 0,
         "Hasil Penanganan": ticket.resolution_result || "-",
+        "Alasan Diselesaikan":
+          ticket.resolution_completed_reason || "-",
         "Alasan Tidak Bisa Diselesaikan":
           ticket.resolution_reason || "-",
         "Tanggal Ditutup": formatDateTime(getClosureDate(ticket)),
@@ -506,7 +516,8 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 34 },
         { wch: 18 },
         { wch: 28 },
-        { wch: 48 },
+        { wch: 48 }, // Alasan Diselesaikan
+        { wch: 48 }, // Alasan Tidak Bisa Diselesaikan
         { wch: 24 },
         { wch: 22 },
         { wch: 34 },
@@ -623,7 +634,16 @@ const [pageSize, setPageSize] = useState(5);
         ],
 
         [
-          "Total tiket dengan alasan penutupan",
+          "Total tiket dengan alasan diselesaikan",
+          allCompletedTickets.filter(
+            (ticket) =>
+              getHistoryStatus(ticket) === "Selesai" &&
+              Boolean(ticket.resolution_completed_reason.trim())
+          ).length,
+        ],
+
+        [
+          "Total tiket dengan alasan tidak bisa diselesaikan",
           allCompletedTickets.filter(
             (ticket) =>
               isNotResolvableTicket(ticket) &&
