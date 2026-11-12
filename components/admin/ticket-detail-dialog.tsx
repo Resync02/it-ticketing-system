@@ -50,6 +50,7 @@ export type TicketDetail = {
   component_cost?: number | null;
   resolution_result?: string;
   resolution_reason?: string;
+  resolution_completed_reason?: string;
 };
 
 type TicketStatus = TicketDetail["status"];
@@ -148,6 +149,9 @@ export default function TicketDetailDialog({
   const [resolutionReason, setResolutionReason] = useState(
     ticket?.resolution_reason ?? ""
   );
+  // Alasan ketika tiket berhasil diselesaikan
+  const [resolutionCompletedReason, setResolutionCompletedReason] =
+    useState(ticket?.resolution_completed_reason ?? "");
 
   const [proof, setProof] = useState<File | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState("");
@@ -172,6 +176,9 @@ export default function TicketDetailDialog({
     setOutcome(ticket?.resolution_result ?? "");
 
     setResolutionReason(ticket?.resolution_reason ?? "");
+    setResolutionCompletedReason(
+      ticket?.resolution_completed_reason ?? ""
+    );
 
     setProof(null);
     setWorkflowMessage("");
@@ -188,6 +195,7 @@ export default function TicketDetailDialog({
     ticket?.component_cost,
     ticket?.resolution_result,
     ticket?.resolution_reason,
+    ticket?.resolution_completed_reason,
   ]);
 
   // Mengambil daftar PIC aktif
@@ -301,6 +309,22 @@ export default function TicketDetailDialog({
       return;
     }
 
+    // Validasi alasan ketika tiket berhasil diselesaikan
+    if (
+      outcome === "Selesai" &&
+      !resolutionCompletedReason.trim()
+    ) {
+      setWorkflowMessage("Alasan diselesaikan wajib diisi.");
+      return;
+    }
+
+    if (resolutionCompletedReason.length > 1000) {
+      setWorkflowMessage(
+        "Alasan diselesaikan tidak boleh lebih dari 1000 karakter."
+      );
+      return;
+    }
+
     // Bukti wajib hanya untuk hasil Selesai
     if (
       outcome === "Selesai" &&
@@ -390,10 +414,14 @@ export default function TicketDetailDialog({
           component_cost: cost,
           resolution_result: outcome,
 
-          // Kirim alasan hanya jika tidak bisa diselesaikan
+          // Alasan untuk masing-masing hasil disimpan terpisah
           resolution_reason:
             outcome === "Tidak bisa diselesaikan"
               ? resolutionReason.trim()
+              : null,
+          resolution_completed_reason:
+            outcome === "Selesai"
+              ? resolutionCompletedReason.trim()
               : null,
 
           proof: proofPayload,
@@ -892,6 +920,35 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                   </div>
                 )}
 
+                {/* ALASAN DISELESAIKAN */}
+                {outcome === "Selesai" && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                    <label
+                      htmlFor="resolution-completed-reason"
+                      className="block text-sm font-semibold text-slate-800"
+                    >
+                      Alasan Diselesaikan *
+                    </label>
+
+                    <textarea
+                      id="resolution-completed-reason"
+                      value={resolutionCompletedReason}
+                      onChange={(event) =>
+                        setResolutionCompletedReason(event.target.value)
+                      }
+                      maxLength={1000}
+                      rows={3}
+                      required
+                      placeholder="Jelaskan hasil perbaikan dan alasan tiket dinyatakan selesai..."
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    />
+
+                    <p className="mt-1 text-right text-xs text-slate-500">
+                      {resolutionCompletedReason.length}/1000 karakter
+                    </p>
+                  </div>
+                )}
+
                 {/* BUKTI PENYELESAIAN */}
                 <div>
                   <p className="text-sm font-medium text-slate-700">
@@ -1020,6 +1077,20 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                     </p>
                   </div>
                 ))}
+
+                {/* ALASAN DISELESAIKAN */}
+                {ticket.resolution_result === "Selesai" && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-sm font-semibold text-emerald-800">
+                      Alasan Diselesaikan
+                    </p>
+
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-emerald-700">
+                      {ticket.resolution_completed_reason ||
+                        "Alasan belum tersedia."}
+                    </p>
+                  </div>
+                )}
 
                 {/* ALASAN TIDAK BISA DISELESAIKAN */}
                 {ticket.resolution_result ===

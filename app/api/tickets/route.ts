@@ -190,6 +190,7 @@ export async function GET() {
 
           t.resolution_result,
           t.resolution_reason,
+          t.resolution_completed_reason,
 
           t.assigned_pic_id,
           p.name AS assigned_pic_name,
@@ -453,6 +454,10 @@ export async function GET() {
 
       resolution_reason: String(
         row.resolution_reason ?? ""
+      ),
+
+      resolution_completed_reason: String(
+        row.resolution_completed_reason ?? ""
       ),
 
       photoAttachmentId:
@@ -1410,7 +1415,35 @@ export async function PATCH(request: NextRequest) {
       }
 
       // =========================================
-      // 6. VALIDASI BUKTI PENYELESAIAN
+      // 6. VALIDASI ALASAN DISELESAIKAN
+      // =========================================
+
+      let resolutionCompletedReason: string | null = null;
+
+      if (resolutionResult === "Selesai") {
+        if (
+          typeof input.resolution_completed_reason !== "string" ||
+          !input.resolution_completed_reason.trim()
+        ) {
+          return jsonError(
+            "Alasan diselesaikan wajib diisi.",
+            400
+          );
+        }
+
+        resolutionCompletedReason =
+          input.resolution_completed_reason.trim();
+
+        if (resolutionCompletedReason.length > 1000) {
+          return jsonError(
+            "Alasan diselesaikan maksimal 1000 karakter.",
+            400
+          );
+        }
+      }
+
+      // =========================================
+      // 7. VALIDASI BUKTI PENYELESAIAN
       // =========================================
 
       const proof = input.proof;
@@ -1682,6 +1715,7 @@ export async function PATCH(request: NextRequest) {
                 component_cost = ?,
                 resolution_result = ?,
                 resolution_reason = ?,
+                resolution_completed_reason = ?,
                 status = ?,
                 completed_at = IF(
                   ? = 1,
@@ -1701,6 +1735,7 @@ export async function PATCH(request: NextRequest) {
               cost,
               resolutionResult,
               resolutionReason,
+              resolutionCompletedReason,
               nextStatus,
               isClosed ? 1 : 0,
               currentTicket.id,
@@ -1735,6 +1770,7 @@ export async function PATCH(request: NextRequest) {
             status: nextStatus,
             resolution_result: resolutionResult,
             resolution_reason: resolutionReason,
+            resolution_completed_reason: resolutionCompletedReason,
             is_closed: isClosed,
           },
         });
