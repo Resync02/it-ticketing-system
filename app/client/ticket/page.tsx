@@ -18,7 +18,6 @@ const divisions = [
   "Finance",
   "Accounting & Tax",
   "HRGA",
-  "IT Support",
 ];
 
 const locations = ["Cakung", "Pusat"];
