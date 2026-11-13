@@ -34,7 +34,6 @@ const DIVISION_CODES: Record<string, string> = {
   "Finance": "FIN",
   "Accounting & Tax": "ACT",
   "HRGA": "HGA",
-  "IT Support": "ITS",
 };
 
 const ALLOWED_PROBLEM_CATEGORIES = [
@@ -591,7 +590,9 @@ export async function POST(request: NextRequest) {
   const division = getText(formData, "division");
   const location = getText(formData, "location");
   const device = getText(formData, "device");
-  const device_type = getText(formData, "device_type");
+  // Kolom lama dipertahankan untuk kompatibilitas database dan data historis.
+  // Form baru tidak lagi meminta field ini, sehingga tiket baru menyimpan NULL.
+  const device_type = getText(formData, "device_type") || null;
 
   const previous_occurrence = getText(
     formData,
@@ -631,7 +632,6 @@ export async function POST(request: NextRequest) {
     !division ||
     !location ||
     !device ||
-    !device_type ||
     !previous_occurrence ||
     !issue ||
     !impact ||
@@ -742,7 +742,7 @@ export async function POST(request: NextRequest) {
     division.length > 120 ||
     location.length > 150 ||
     device.length > 100 ||
-    device_type.length > 2000 ||
+    (device_type !== null && device_type.length > 2000) ||
     issue.length > 10000 ||
     impact.length > 10000
   ) {
@@ -919,12 +919,13 @@ export async function POST(request: NextRequest) {
       }
     ).insertId;
 
-    // Format: IT-[KODE DIVISI]-[URUTAN DIVISI]-[URUTAN GLOBAL].
+    // Format: IT-[URUTAN DIVISI]-[URUTAN GLOBAL]-[KODE DIVISI].
+    // ticketId menjadi nomor total tiket masuk karena berasal dari AUTO_INCREMENT global.
     ticketNumber = [
       "IT",
-      divisionCode,
       String(nextDivisionNumber).padStart(2, "0"),
       String(ticketId).padStart(3, "0"),
+      divisionCode,
     ].join("-");
 
     // Simpan nomor tiket final sebelum transaksi di-commit.

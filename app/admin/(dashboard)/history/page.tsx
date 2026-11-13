@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -103,28 +102,34 @@ function formatCompletionDate(value: string | null | undefined) {
   });
 }
 
-// Menentukan apakah tiket ditutup karena tidak bisa diselesaikan.
-// resolution_result juga digunakan sebagai fallback untuk data lama.
-function isNotResolvableTicket(ticket: TicketItem) {
-  return (
-    ticket.status?.trim() === "Tidak bisa diselesaikan" ||
-    ticket.resolution_result?.trim() === "Tidak bisa diselesaikan"
-  );
-}
-
-// Menentukan apakah tiket masuk ke History.
-function isClosedTicket(ticket: TicketItem) {
-  return (
-    ticket.status?.trim() === "Selesai" ||
-    isNotResolvableTicket(ticket)
-  );
-}
-
-// Menampilkan status berdasarkan hasil penanganan.
+// Status final yang dipilih PIC pada hasil penanganan.
+// resolution_result menjadi sumber utama; status tiket menjadi fallback data lama.
 function getHistoryStatus(ticket: TicketItem) {
-  return isNotResolvableTicket(ticket)
-    ? "Tidak bisa diselesaikan"
-    : ticket.status;
+  const validatedResult = ticket.resolution_result?.trim();
+
+  if (
+    validatedResult === "Selesai" ||
+    validatedResult === "Tidak bisa diselesaikan"
+  ) {
+    return validatedResult;
+  }
+
+  const ticketStatus = ticket.status?.trim();
+  return ticketStatus || "-";
+}
+
+// Menentukan apakah tiket ditutup karena PIC menyatakan tidak bisa diselesaikan.
+function isNotResolvableTicket(ticket: TicketItem) {
+  return getHistoryStatus(ticket) === "Tidak bisa diselesaikan";
+}
+
+// Menentukan apakah tiket masuk ke History berdasarkan status final PIC.
+function isClosedTicket(ticket: TicketItem) {
+  const finalStatus = getHistoryStatus(ticket);
+  return (
+    finalStatus === "Selesai" ||
+    finalStatus === "Tidak bisa diselesaikan"
+  );
 }
 
 // Mengambil tanggal penutupan, termasuk fallback untuk tiket lama.
@@ -420,6 +425,7 @@ const [pageSize, setPageSize] = useState(5);
         "Deskripsi Masalah": ticket.issue,
         "Kendala dan Dampak": ticket.impact || "-",
         "Prioritas": ticket.priority ?? "Belum ditentukan",
+        "Status Final PIC": getHistoryStatus(ticket),
         "Nama PIC": ticket.assigned_pic_name || "Belum ditetapkan",
         "Tanggal Pengajuan": formatDateTime(ticket.time),
         "Tanggal Ditutup": formatDateTime(getClosureDate(ticket)),
@@ -452,6 +458,7 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 48 }, // Deskripsi
         { wch: 48 }, // Dampak
         { wch: 16 }, // Prioritas
+        { wch: 30 }, // Status Final PIC
         { wch: 24 }, // Nama PIC
         { wch: 24 }, // Pengajuan
         { wch: 24 }, // Penutupan
@@ -488,6 +495,7 @@ const [pageSize, setPageSize] = useState(5);
           : "-",
         "Biaya (Rp)": ticket.component_cost ?? 0,
         "Hasil Penanganan": ticket.resolution_result || "-",
+        "Status Final PIC": getHistoryStatus(ticket),
         "Alasan Diselesaikan":
           ticket.resolution_completed_reason || "-",
         "Alasan Tidak Bisa Diselesaikan":
@@ -516,6 +524,7 @@ const [pageSize, setPageSize] = useState(5);
         { wch: 34 },
         { wch: 18 },
         { wch: 28 },
+        { wch: 30 }, // Status Final PIC
         { wch: 48 }, // Alasan Diselesaikan
         { wch: 48 }, // Alasan Tidak Bisa Diselesaikan
         { wch: 24 },
@@ -631,6 +640,11 @@ const [pageSize, setPageSize] = useState(5);
           allCompletedTickets.filter(
             isNotResolvableTicket
           ).length,
+        ],
+
+        [
+          "Status final berdasarkan validasi PIC",
+          "Kolom Status Final PIC pada Sheet Data Tiket Ditutup dan Penanganan Admin menggunakan hasil penanganan PIC yang tersimpan.",
         ],
 
         [

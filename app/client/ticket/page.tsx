@@ -56,7 +56,6 @@ export default function ClientTicketPage() {
   const [division, setDivision] = useState("");
   const [location, setLocation] = useState("");
   const [device, setDevice] = useState("");
-  const [deviceType, setDeviceType] = useState("");
   const [previous, setPrevious] = useState("");
   const [issue, setIssue] = useState("");
   const [impact, setImpact] = useState("");
@@ -80,7 +79,6 @@ export default function ClientTicketPage() {
       !division ||
       !location ||
       !device ||
-      !deviceType.trim() ||
       !previous ||
       !issue.trim() ||
       !impact.trim()
@@ -141,7 +139,6 @@ export default function ClientTicketPage() {
       formData.set("division", division);
       formData.set("location", location);
       formData.set("device", device);
-      formData.set("device_type", deviceType.trim());
       formData.set("previous_occurrence", previous);
       formData.set("issue", issue.trim());
       formData.set("impact", impact.trim());
@@ -199,7 +196,6 @@ export default function ClientTicketPage() {
       setDivision("");
       setLocation("");
       setDevice("");
-      setDeviceType("");
       setPrevious("");
       setIssue("");
       setImpact("");
@@ -364,7 +360,7 @@ export default function ClientTicketPage() {
               onChange={(e) => setDevice(e.target.value)}
               required
             >
-              <option value="">Pilih kategori permasalahan</option>
+              <option value="">Pilih jenis permasalahan</option>
 
               {problemCategories.map((item) => (
                 <option key={item} value={item}>
@@ -372,27 +368,6 @@ export default function ClientTicketPage() {
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Tipe Perangkat */}
-          <div>
-            <label
-              className="text-sm font-semibold text-slate-800"
-              htmlFor="deviceType"
-            >
-              Kategori Permasalahan *
-            </label>
-
-            <textarea
-              id="deviceType"
-              className={inputClass}
-              rows={2}
-              value={deviceType}
-              onChange={(e) => setDeviceType(e.target.value)}
-              required
-              maxLength={2000}
-              placeholder="Contoh: Hardware: Komputer, Laptop, Printer. Software : office, adobe, atau nama aplikasi/layanan yang bermasalah."
-            />
           </div>
 
           {/* Kendala */}
