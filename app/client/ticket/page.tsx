@@ -529,28 +529,29 @@ export default function ClientTicketPage() {
               className="rounded-xl border border-green-200 bg-green-50 p-4"
             >
               <div className="flex gap-3">
-                <CheckCircle2 className="text-green-700" />
+                <CheckCircle2 className="mt-0.5 shrink-0 text-green-700" />
 
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-green-900">
                     Laporan berhasil dikirim
                   </p>
 
                   <p className="mt-1 text-sm text-green-800">
-                    Nomor tiket: <strong>{ticketNumber}</strong>
+                    Nomor tiket: <strong className="break-all">{ticketNumber}</strong>
                   </p>
 
                   <p className="mt-1 text-xs text-green-800">
                     Status: Menunggu persetujuan tim IT.
                   </p>
-                  <Link
-                    href="/client/tracking"
-                    className="mt-3 inline-flex items-center rounded-lg bg-green-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-800"
-                  >
-                    Lacak Status Tiket
-                  </Link>
                 </div>
               </div>
+
+              <Link
+                href="/client/tracking"
+                className="mt-4 flex w-full items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-200"
+              >
+                Lacak Status Tiket
+              </Link>
             </div>
           )}
 
