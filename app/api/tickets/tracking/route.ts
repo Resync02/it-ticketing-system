@@ -14,8 +14,6 @@ type JsonBody = {
   phone?: unknown;
   confirmation?: unknown;
   reason?: unknown;
-  rating?: unknown;
-  review?: unknown;
 };
 
 function jsonError(message: string, status: number) {
@@ -102,8 +100,6 @@ async function getVerifiedTicket(ticketNumber: string, phone: string) {
       SELECT
         confirmation,
         reason,
-        rating,
-        review,
         DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
       FROM ticket_customer_feedback
       WHERE ticket_id = ?
@@ -117,8 +113,6 @@ async function getVerifiedTicket(ticketNumber: string, phone: string) {
     (feedbackRows as Array<{
       confirmation: string;
       reason: string | null;
-      rating: number | string | null;
-      review: string | null;
       created_at: string;
     }>)[0] ?? null;
 
@@ -155,11 +149,6 @@ async function getVerifiedTicket(ticketNumber: string, phone: string) {
       ? {
           confirmation: String(latestFeedback.confirmation ?? ""),
           reason: String(latestFeedback.reason ?? ""),
-          rating:
-            latestFeedback.rating == null
-              ? null
-              : Number(latestFeedback.rating),
-          review: String(latestFeedback.review ?? ""),
           created_at: feedbackAt,
         }
       : null,
@@ -237,24 +226,10 @@ export async function POST(request: NextRequest) {
   }
 
   const reason = getString(body.reason);
-  const review = getString(body.review);
-  const rating = Number(body.rating);
-
   if (confirmation === "Belum Selesai") {
     if (reason.length < 5 || reason.length > 2000) {
       return jsonError(
         "Alasan belum selesai wajib diisi (5–2000 karakter).",
-        400
-      );
-    }
-  } else {
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return jsonError("Berikan rating antara 1 sampai 5 bintang.", 400);
-    }
-
-    if (review.length < 5 || review.length > 2000) {
-      return jsonError(
-        "Deskripsi review wajib diisi (5–2000 karakter).",
         400
       );
     }
@@ -338,18 +313,14 @@ export async function POST(request: NextRequest) {
         INSERT INTO ticket_customer_feedback (
           ticket_id,
           confirmation,
-          reason,
-          rating,
-          review
+          reason
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?)
       `,
       [
         ticket.id,
         confirmation,
         confirmation === "Belum Selesai" ? reason : null,
-        confirmation === "Sudah Selesai" ? rating : null,
-        confirmation === "Sudah Selesai" ? review : null,
       ]
     );
 
@@ -397,7 +368,7 @@ export async function POST(request: NextRequest) {
         message:
           confirmation === "Belum Selesai"
             ? "Laporan diterima. Tiket dibuka kembali untuk ditangani tim IT."
-            : "Terima kasih. Konfirmasi dan review Anda berhasil disimpan.",
+            : "Terima kasih. Konfirmasi penyelesaian tiket berhasil disimpan.",
       },
       { headers: { "Cache-Control": "no-store" } }
     );

@@ -9,7 +9,6 @@ import {
   Clock3,
   Search,
   ShieldCheck,
-  Star,
   Ticket,
   UserRound,
 } from "lucide-react";
@@ -48,8 +47,6 @@ type TrackTicket = {
 type TrackFeedback = {
   confirmation: "Belum Selesai" | "Sudah Selesai";
   reason: string;
-  rating: number | null;
-  review: string;
   created_at: string;
 };
 
@@ -121,8 +118,6 @@ export default function TicketTrackingPage() {
     "Belum Selesai" | "Sudah Selesai" | ""
   >("");
   const [reason, setReason] = useState("");
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -157,8 +152,6 @@ export default function TicketTrackingPage() {
     setData(result.data);
     setSelectedConfirmation("");
     setReason("");
-    setRating(0);
-    setReview("");
   }
 
   async function handleLookup(event: FormEvent<HTMLFormElement>) {
@@ -190,16 +183,6 @@ export default function TicketTrackingPage() {
       return;
     }
 
-    if (selectedConfirmation === "Sudah Selesai") {
-      if (rating < 1 || rating > 5) {
-        setError("Pilih rating bintang 1 sampai 5.");
-        return;
-      }
-      if (review.trim().length < 5) {
-        setError("Tuliskan review minimal 5 karakter.");
-        return;
-      }
-    }
 
     setBusy(true);
     setError("");
@@ -216,8 +199,6 @@ export default function TicketTrackingPage() {
           phone,
           confirmation: selectedConfirmation,
           reason: selectedConfirmation === "Belum Selesai" ? reason.trim() : undefined,
-          rating: selectedConfirmation === "Sudah Selesai" ? rating : undefined,
-          review: selectedConfirmation === "Sudah Selesai" ? review.trim() : undefined,
         }),
       });
 
@@ -445,17 +426,6 @@ export default function TicketTrackingPage() {
                 {data.latest_feedback.reason && (
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{data.latest_feedback.reason}</p>
                 )}
-                {data.latest_feedback.rating != null && (
-                  <div className="mt-3">
-                    <div className="flex items-center gap-1 text-amber-500" aria-label={`Rating ${data.latest_feedback.rating} dari 5 bintang`}>
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <Star key={index} size={17} fill={index < data.latest_feedback!.rating! ? "currentColor" : "none"} />
-                      ))}
-                      <span className="ml-1 text-sm font-semibold text-slate-700">{data.latest_feedback.rating}/5</span>
-                    </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{data.latest_feedback.review}</p>
-                  </div>
-                )}
               </section>
             )}
 
@@ -513,43 +483,6 @@ export default function TicketTrackingPage() {
                     </label>
                   )}
 
-                  {selectedConfirmation === "Sudah Selesai" && (
-                    <div className="space-y-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">Rating layanan IT Support *</p>
-                        <div className="mt-2 flex items-center gap-1" role="radiogroup" aria-label="Rating layanan IT Support">
-                          {[1, 2, 3, 4, 5].map((value) => (
-                            <button
-                              key={value}
-                              type="button"
-                              role="radio"
-                              aria-checked={rating === value}
-                              aria-label={`${value} bintang`}
-                              onClick={() => setRating(value)}
-                              className="rounded-md p-1 text-amber-500 transition hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-300"
-                            >
-                              <Star size={30} fill={rating >= value ? "currentColor" : "none"} />
-                            </button>
-                          ))}
-                          <span className="ml-2 text-sm text-slate-600">{rating > 0 ? `${rating}/5` : "Pilih rating"}</span>
-                        </div>
-                      </div>
-                      <label className="block text-sm font-semibold text-slate-800">
-                        Review / Deskripsi *
-                        <textarea
-                          value={review}
-                          onChange={(event) => setReview(event.target.value)}
-                          className={inputClass}
-                          rows={4}
-                          maxLength={2000}
-                          required
-                          placeholder="Ceritakan pengalaman Anda terhadap kecepatan respons, komunikasi, dan hasil penanganan tim IT..."
-                        />
-                        <span className="mt-1 block text-right text-xs font-normal text-slate-500">{review.length}/2000 karakter</span>
-                      </label>
-                    </div>
-                  )}
-
                   {selectedConfirmation && (
                     <button
                       type="submit"
@@ -566,7 +499,7 @@ export default function TicketTrackingPage() {
             {data.confirmation_submitted_for_current_completion && (
               <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                 <CheckCircle2 className="mt-0.5 shrink-0" size={18} />
-                <p>Terima kasih. Anda sudah mengonfirmasi penyelesaian tiket ini dan review telah tercatat.</p>
+                <p>Terima kasih. Anda sudah mengonfirmasi bahwa masalah telah selesai.</p>
               </div>
             )}
           </div>
