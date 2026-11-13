@@ -546,12 +546,6 @@ export default function ClientTicketPage() {
                 </div>
               </div>
 
-              <Link
-                href="/client/tracking"
-                className="mt-4 flex w-full items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-200"
-              >
-                Lacak Status Tiket
-              </Link>
             </div>
           )}
 
@@ -566,19 +560,22 @@ export default function ClientTicketPage() {
             {submitting ? "Mengirim laporan..." : "Kirim Laporan"}
           </button>
 
+          {/* Tombol tracking selalu tersedia, termasuk sebelum tiket dikirim */}
+          <Link
+            href="/client/tracking"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-700 bg-white px-5 py-3.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+          >
+            <Ticket size={17} />
+            Cek Status Tiket
+          </Link>
+
           <p className="text-center text-xs text-slate-500">
             Kolom bertanda * wajib diisi.
           </p>
         </form>
 
-        <footer className="mt-6 flex flex-col items-center gap-2 text-center text-xs text-slate-500">
-          <span>IT Support Ticketing System</span>
-          <Link
-            href="/client/tracking"
-            className="font-medium text-blue-700 hover:text-blue-800"
-          >
-            Lacak status tiket yang sudah dikirim
-          </Link>
+        <footer className="mt-6 text-center text-xs text-slate-500">
+          IT Support Ticketing System
         </footer>
       </div>
     </main>
