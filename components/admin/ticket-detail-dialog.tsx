@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   ZoomIn,
   LockKeyhole,
+  Star,
 } from "lucide-react";
 
 export type TicketDetail = {
@@ -51,6 +52,11 @@ export type TicketDetail = {
   resolution_result?: string;
   resolution_reason?: string;
   resolution_completed_reason?: string;
+  customer_confirmation?: string;
+  customer_reason?: string;
+  customer_rating?: number | null;
+  customer_review?: string;
+  customer_feedback_at?: string;
 };
 
 type TicketStatus = TicketDetail["status"];
@@ -672,6 +678,80 @@ const showWorklogSummary = isClosed || hasSavedWorklog;
                   {ticket.impact}
                 </p>
               </div>
+            )}
+
+            {/* VALIDASI DAN REVIEW PENGGUNA */}
+            {ticket.customer_confirmation && (
+              <section
+                className={`space-y-3 rounded-xl border p-4 ${
+                  ticket.customer_confirmation === "Belum Selesai"
+                    ? "border-amber-200 bg-amber-50/60"
+                    : "border-emerald-200 bg-emerald-50/60"
+                }`}
+              >
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Validasi dan penilaian pengguna
+                </h3>
+
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      ticket.customer_confirmation === "Belum Selesai"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-emerald-100 text-emerald-800"
+                    }`}
+                  >
+                    {ticket.customer_confirmation}
+                  </span>
+                  {ticket.customer_feedback_at && (
+                    <span className="text-xs text-slate-500">
+                      {formatSubmissionDateTime(ticket.customer_feedback_at).date} · {formatSubmissionDateTime(ticket.customer_feedback_at).time}
+                    </span>
+                  )}
+                </div>
+
+                {ticket.customer_reason && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-600">
+                      Alasan masalah belum selesai
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">
+                      {ticket.customer_reason}
+                    </p>
+                  </div>
+                )}
+
+                {ticket.customer_rating != null && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-600">
+                      Rating layanan IT Support
+                    </p>
+                    <div className="mt-1 flex items-center gap-1 text-amber-500">
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <Star
+                          key={index}
+                          size={17}
+                          fill={index < Number(ticket.customer_rating) ? "currentColor" : "none"}
+                        />
+                      ))}
+                      <span className="ml-1 text-sm font-semibold text-slate-700">
+                        {ticket.customer_rating}/5
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {ticket.customer_review && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-600">
+                      Review pengguna
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">
+                      {ticket.customer_review}
+                    </p>
+                  </div>
+                )}
+              </section>
             )}
 
             {/* FOTO LAMPIRAN */}

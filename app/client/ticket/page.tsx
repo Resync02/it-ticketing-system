@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import {
   CalendarClock,
   CheckCircle2,
@@ -542,6 +543,12 @@ export default function ClientTicketPage() {
                   <p className="mt-1 text-xs text-green-800">
                     Status: Menunggu persetujuan tim IT.
                   </p>
+                  <Link
+                    href="/client/tracking"
+                    className="mt-3 inline-flex items-center rounded-lg bg-green-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-800"
+                  >
+                    Lacak Status Tiket
+                  </Link>
                 </div>
               </div>
             </div>
@@ -563,8 +570,14 @@ export default function ClientTicketPage() {
           </p>
         </form>
 
-        <footer className="mt-6 text-center text-xs text-slate-500">
-           IT Support Ticketing System
+        <footer className="mt-6 flex flex-col items-center gap-2 text-center text-xs text-slate-500">
+          <span>IT Support Ticketing System</span>
+          <Link
+            href="/client/tracking"
+            className="font-medium text-blue-700 hover:text-blue-800"
+          >
+            Lacak status tiket yang sudah dikirim
+          </Link>
         </footer>
       </div>
     </main>

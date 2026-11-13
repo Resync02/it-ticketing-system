@@ -191,6 +191,46 @@ export async function GET() {
           t.resolution_reason,
           t.resolution_completed_reason,
 
+          (
+            SELECT cf.confirmation
+            FROM ticket_customer_feedback cf
+            WHERE cf.ticket_id = t.id
+            ORDER BY cf.created_at DESC, cf.id DESC
+            LIMIT 1
+          ) AS customer_confirmation,
+
+          (
+            SELECT cf.reason
+            FROM ticket_customer_feedback cf
+            WHERE cf.ticket_id = t.id
+            ORDER BY cf.created_at DESC, cf.id DESC
+            LIMIT 1
+          ) AS customer_reason,
+
+          (
+            SELECT cf.rating
+            FROM ticket_customer_feedback cf
+            WHERE cf.ticket_id = t.id
+            ORDER BY cf.created_at DESC, cf.id DESC
+            LIMIT 1
+          ) AS customer_rating,
+
+          (
+            SELECT cf.review
+            FROM ticket_customer_feedback cf
+            WHERE cf.ticket_id = t.id
+            ORDER BY cf.created_at DESC, cf.id DESC
+            LIMIT 1
+          ) AS customer_review,
+
+          (
+            SELECT DATE_FORMAT(cf.created_at, '%Y-%m-%d %H:%i:%s')
+            FROM ticket_customer_feedback cf
+            WHERE cf.ticket_id = t.id
+            ORDER BY cf.created_at DESC, cf.id DESC
+            LIMIT 1
+          ) AS customer_feedback_at,
+
           t.assigned_pic_id,
           p.name AS assigned_pic_name,
 
@@ -457,6 +497,19 @@ export async function GET() {
 
       resolution_completed_reason: String(
         row.resolution_completed_reason ?? ""
+      ),
+
+      customer_confirmation: String(
+        row.customer_confirmation ?? ""
+      ),
+      customer_reason: String(row.customer_reason ?? ""),
+      customer_rating:
+        row.customer_rating == null
+          ? null
+          : Number(row.customer_rating),
+      customer_review: String(row.customer_review ?? ""),
+      customer_feedback_at: String(
+        row.customer_feedback_at ?? ""
       ),
 
       photoAttachmentId:
