@@ -504,13 +504,6 @@ export default function TicketTrackingPage() {
             )}
           </div>
         )}
-
-        <footer className="mt-8 flex flex-col items-center justify-center gap-2 text-center text-xs text-slate-500">
-          <p>IT Support Ticketing System</p>
-          <Link href="/client/ticket" className="font-medium text-blue-700 hover:text-blue-800">
-            Buat laporan baru
-          </Link>
-        </footer>
       </div>
     </main>
   );
