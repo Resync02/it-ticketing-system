@@ -573,10 +573,6 @@ export default function ClientTicketPage() {
             Kolom bertanda * wajib diisi.
           </p>
         </form>
-
-        <footer className="mt-6 text-center text-xs text-slate-500">
-          IT Support Ticketing System
-        </footer>
       </div>
     </main>
   );
